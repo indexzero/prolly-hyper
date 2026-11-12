@@ -1,0 +1,176 @@
+{
+  "version": 1,
+  "schema": [
+    {
+      "name": "map-entry",
+      "namespace": "prolly-hyper",
+      "compact": true,
+      "flagsPosition": -1,
+      "fields": [
+        {
+          "name": "key",
+          "required": true,
+          "type": "buffer",
+          "version": 1
+        },
+        {
+          "name": "value",
+          "required": true,
+          "type": "buffer",
+          "version": 1
+        }
+      ]
+    },
+    {
+      "name": "set-entry",
+      "namespace": "prolly-hyper",
+      "compact": true,
+      "flagsPosition": -1,
+      "fields": [
+        {
+          "name": "key",
+          "required": true,
+          "type": "buffer",
+          "version": 1
+        }
+      ]
+    },
+    {
+      "name": "branch-entry",
+      "namespace": "prolly-hyper",
+      "compact": true,
+      "flagsPosition": -1,
+      "fields": [
+        {
+          "name": "key",
+          "required": true,
+          "type": "buffer",
+          "version": 1
+        },
+        {
+          "name": "address",
+          "required": true,
+          "type": "fixed32",
+          "version": 1
+        }
+      ]
+    },
+    {
+      "name": "map-leaf",
+      "namespace": "prolly-hyper",
+      "compact": true,
+      "flagsPosition": -1,
+      "fields": [
+        {
+          "name": "version",
+          "required": true,
+          "type": "uint",
+          "version": 1
+        },
+        {
+          "name": "kind",
+          "required": true,
+          "type": "uint",
+          "version": 1
+        },
+        {
+          "name": "flags",
+          "required": true,
+          "type": "uint",
+          "version": 1
+        },
+        {
+          "name": "distance",
+          "required": true,
+          "type": "uint",
+          "version": 1
+        },
+        {
+          "name": "entries",
+          "required": true,
+          "array": true,
+          "type": "@prolly-hyper/map-entry",
+          "version": 1
+        }
+      ]
+    },
+    {
+      "name": "branch",
+      "namespace": "prolly-hyper",
+      "compact": true,
+      "flagsPosition": -1,
+      "fields": [
+        {
+          "name": "version",
+          "required": true,
+          "type": "uint",
+          "version": 1
+        },
+        {
+          "name": "kind",
+          "required": true,
+          "type": "uint",
+          "version": 1
+        },
+        {
+          "name": "flags",
+          "required": true,
+          "type": "uint",
+          "version": 1
+        },
+        {
+          "name": "distance",
+          "required": true,
+          "type": "uint",
+          "version": 1
+        },
+        {
+          "name": "entries",
+          "required": true,
+          "array": true,
+          "type": "@prolly-hyper/branch-entry",
+          "version": 1
+        }
+      ]
+    },
+    {
+      "name": "set-leaf",
+      "namespace": "prolly-hyper",
+      "compact": true,
+      "flagsPosition": -1,
+      "fields": [
+        {
+          "name": "version",
+          "required": true,
+          "type": "uint",
+          "version": 1
+        },
+        {
+          "name": "kind",
+          "required": true,
+          "type": "uint",
+          "version": 1
+        },
+        {
+          "name": "flags",
+          "required": true,
+          "type": "uint",
+          "version": 1
+        },
+        {
+          "name": "distance",
+          "required": true,
+          "type": "uint",
+          "version": 1
+        },
+        {
+          "name": "entries",
+          "required": true,
+          "array": true,
+          "type": "@prolly-hyper/set-entry",
+          "version": 1
+        }
+      ]
+    }
+  ]
+}
