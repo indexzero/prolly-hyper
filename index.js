@@ -1,8 +1,8 @@
 // prolly-hyper: a port of mikeal/prolly-trees to hyperschema codecs, BLAKE2b
-// and the hyper stack. The set, the diff and the hyperbee2 storage land in
-// later dispatches.
+// and the hyper stack. The hyperbee2 storage lands in a later dispatch.
 const tree = require('./lib/tree')
 const map = require('./lib/map')
+const set = require('./lib/set')
 const encoding = require('./lib/encoding')
 const hash = require('./lib/hash')
 const chunker = require('./lib/chunker')
@@ -22,10 +22,12 @@ module.exports = {
   BranchEntry: tree.BranchEntry,
   MapLeafEntry: map.MapLeafEntry,
   MapBranchEntry: map.MapBranchEntry,
-  SetLeafEntry: tree.SetLeafEntry,
+  SetLeafEntry: set.SetLeafEntry,
+  SetBranchEntry: set.SetBranchEntry,
 
   // the high-level API
   ProllyMap: map.ProllyMap,
+  ProllySet: set.ProllySet,
   MemoryStorage,
 
   // the consensus parameters
