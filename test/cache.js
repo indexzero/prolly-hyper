@@ -196,3 +196,12 @@ test('a shared cache across two storages reads children from the storage of the 
   t.is(getsA, 1, 'no child was read from storage A')
   t.ok(getsB > 0, 'every child came from storage B')
 })
+
+// D-011 F-05. A bad cache size throws `INVALID_CACHE_SIZE`, with a code.
+test('a bad cache size throws INVALID_CACHE_SIZE', (t) => {
+  for (const max of [0, -1, 1.5, NaN, 'x', Infinity]) {
+    t.exception.all(() => new Cache(max), { code: 'INVALID_CACHE_SIZE' }, `max ${String(max)}`)
+    t.exception.all(() => new Cache(max), RangeError, `max ${String(max)} is a RangeError`)
+  }
+  t.is(new Cache(1).max, 1)
+})

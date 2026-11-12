@@ -305,3 +305,15 @@ test('a delayed read does not replace the root that a later put committed', asyn
   t.alike(await reopened.get(key('a')), val('new'), 'the storage holds the committed write')
   t.alike(await reopened.get(key('b')), val('two'))
 })
+
+// D-011 F-05. Ops that are not an array throw `INVALID_OPS`, with a code.
+test('batch with ops that are not an array throws INVALID_OPS', async (t) => {
+  const map = await open()
+  await t.exception.all(map.batch({}), { code: 'INVALID_OPS' })
+  await t.exception.all(map.batch({}), TypeError)
+  await t.exception.all(map.batch(null), { code: 'INVALID_OPS' })
+  await t.exception.all(map.batch('a'), { code: 'INVALID_OPS' })
+  await map.put(key('a'), val('1'))
+  await t.exception.all(map.batch({}), { code: 'INVALID_OPS' })
+  t.alike(await map.get(key('a')), val('1'), 'the map still works')
+})

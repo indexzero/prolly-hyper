@@ -555,3 +555,13 @@ test('a delayed read does not restore a key that a later delete removed', async 
   t.is(await reopened.has(key('b')), true)
   t.is(await reopened.has(key('c')), true)
 })
+
+// D-011 F-05. Ops that are not an array throw `INVALID_OPS`, with a code.
+test('batch with ops that are not an array throws INVALID_OPS', async (t) => {
+  const set = await open()
+  await t.exception.all(set.batch({}), { code: 'INVALID_OPS' })
+  await t.exception.all(set.batch({}), TypeError)
+  await set.add(key('a'))
+  await t.exception.all(set.batch(undefined), { code: 'INVALID_OPS' })
+  t.is(await set.has(key('a')), true, 'the set still works')
+})

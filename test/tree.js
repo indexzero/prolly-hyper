@@ -12,7 +12,7 @@ const b4a = require('b4a')
 const { Entry, EntryList, create, load, MapLeafEntry } = require('../lib/tree')
 const { bf, MAX_UINT32 } = require('../lib/chunker')
 const { Cache, nocache } = require('../lib/cache')
-const { storage, build, checkInvariants, sortEntries } = require('./helpers')
+const { storage, build, checkInvariants, sortEntries, collectNodes } = require('./helpers')
 
 const compare = b4a.compare
 const key = (str) => b4a.from(str)
@@ -1100,3 +1100,25 @@ for (const [label, makeCache] of [
     )
   })
 }
+
+// D-011 F-05. A key that is not bytes throws `INVALID_KEY` before any
+// traversal, on the low-level reads as on the high-level ones.
+test('low-level reads with a key that is not bytes throw INVALID_KEY', async (t) => {
+  const tree = await Tree.create(list)
+  const root = tree.root
+  await t.exception.all(root.getEntry('a'), { code: 'INVALID_KEY' })
+  await t.exception.all(root.getEntry('a'), TypeError)
+  await t.exception.all(root.getEntry(1), { code: 'INVALID_KEY' })
+  await t.exception.all(root.getEntries(['a']), { code: 'INVALID_KEY' })
+  await t.exception.all(root.getEntries([key('a'), 'b']), { code: 'INVALID_KEY' })
+  await t.exception.all(root.getEntries('a'), { code: 'INVALID_KEY' })
+  await t.exception.all(root.getRangeEntries('a', key('z')), { code: 'INVALID_KEY' })
+  await t.exception.all(root.getRangeEntries(key('a'), 'z'), { code: 'INVALID_KEY' })
+  await t.exception.all(root.iterate({ gte: 'a' }).next(), { code: 'INVALID_KEY' })
+  // The leaf path too.
+  const leaf = (await collectNodes(root)).get(0)[0]
+  await t.exception.all(leaf.getEntry('a'), { code: 'INVALID_KEY' })
+  await t.exception.all(leaf.getEntries(['a']), { code: 'INVALID_KEY' })
+  await t.exception.all(leaf.getRangeEntries('a', key('z')), { code: 'INVALID_KEY' })
+  t.alike(await tree.get(key('a')), val(1), 'the tree still reads')
+})

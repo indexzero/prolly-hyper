@@ -148,6 +148,8 @@ Every thrown error carries a `code`. The codes are exported as `errors`.
 | `DUPLICATE_KEY`                | `create` got a list with two equal keys                        |
 | `INVALID_KEY`, `INVALID_VALUE` | a key or a value that is not bytes                             |
 | `INVALID_FACTOR`               | `bf` got a factor outside 2 to 4294967295                      |
+| `INVALID_OPS`                  | `batch` got ops that are not an array                          |
+| `INVALID_CACHE_SIZE`           | `new Cache(max)` got a max that is not a positive integer      |
 | `CHUNKER_NO_PROGRESS`          | 32 consecutive levels produced one node per entry              |
 | `UNSUPPORTED_VERSION`          | a node with a `version` other than 1                           |
 | `DECODE_ERROR`                 | a node that breaks a decode rule                               |
