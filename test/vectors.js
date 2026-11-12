@@ -8,7 +8,8 @@ const vectors = require('./vectors.json')
 const { encodeNode, decodeNode, encodeEntry } = require('../lib/encoding')
 const { address, identity } = require('../lib/hash')
 const { bf } = require('../lib/chunker')
-const { create, Entry } = require('../lib/tree')
+const { create, load, Entry, SetLeafEntry } = require('../lib/tree')
+const { ProllySet } = require('../lib/set')
 const { storage, collectNodes } = require('./helpers')
 
 const hex = (buf) => b4a.toString(buf, 'hex')
@@ -125,4 +126,55 @@ for (const factor of [32, 3, 2]) {
       t.is(count, v.nodes, 'node count after load')
     })
   }
+}
+
+// The three set vectors through the high-level `ProllySet`. The set built from
+// the fixed list by one batch, by single adds in reverse order and by batches
+// of five lands on the pinned root, with the pinned node count and the pinned
+// boundary entries.
+for (const factor of [32, 3, 2]) {
+  const v = vectors.trees[`set-factor${factor}`]
+  test(`independent set vector through ProllySet: factor ${factor}`, async (t) => {
+    const keys = fixedList().map(({ key }) => key)
+    const chunker = bf(factor)
+    const boundaries = keys
+      .filter((key) => chunker(new SetLeafEntry({ key })))
+      .map((key) => b4a.toString(key))
+    t.alike(boundaries, v.boundaryEntries, 'boundary entries')
+
+    const builds = {
+      'one batch': async (set) => {
+        await set.batch(keys.map((key) => ({ key })))
+      },
+      'single adds in reverse order': async (set) => {
+        for (const key of [...keys].reverse()) await set.add(key)
+      },
+      'batches of five': async (set) => {
+        for (let i = 0; i < keys.length; i += 5) {
+          await set.batch(keys.slice(i, i + 5).map((key) => ({ key })))
+        }
+      }
+    }
+    for (const [name, run] of Object.entries(builds)) {
+      const set = await ProllySet.open(storage(), { chunker })
+      await run(set)
+      t.is(hex(set.root), v.root, `${name}: root address`)
+      const root = await load({ address: set.root, storage: set.storage, chunker, kind: 'set' })
+      t.is(hex(root.bytes), v.rootBytesHex, `${name}: root bytes`)
+      t.is(root.distance, v.rootDistance, `${name}: root distance`)
+      t.is(root.closed, v.rootClosed, `${name}: root closed`)
+      const levels = await collectNodes(root)
+      let count = 0
+      for (const level of levels.values()) count += level.length
+      t.is(count, v.nodes, `${name}: node count`)
+      t.is((levels.get(0) || []).length, v.leaves, `${name}: leaf count`)
+      const got = []
+      for await (const key of set.keys()) got.push(b4a.toString(key))
+      t.alike(
+        got,
+        keys.map((key) => b4a.toString(key)),
+        `${name}: keys`
+      )
+    }
+  })
 }
