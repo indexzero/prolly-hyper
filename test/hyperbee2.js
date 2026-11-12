@@ -349,3 +349,51 @@ test('atomicity: one append per batch, checkouts, and a failed flush', async (t)
   t.alike(await map.get(key('fail')), val('1'))
   t.is(bee.core.length > before2, true)
 })
+
+// D-010 F-01. The lock that `commit` takes belongs to the `Hyperbee2` object
+// (lib/context.js:19). Two `Hyperbee2` objects on one hypercore share the
+// core and not the lock or the head. A writable bee never follows the appends
+// of its core. So the second bee reads root null, equal to its `expected`,
+// and without a guard it flushes from its stale root and the first write is
+// unreachable from the new head.
+test('two Hyperbee2 objects on one hypercore: the bee that is behind gets CONFLICT', async (t) => {
+  const { storeA, track } = await setup(t)
+  const beeA = track(new Hyperbee2(storeA))
+  const beeB = track(new Hyperbee2(storeA))
+  await beeA.ready()
+  await beeB.ready()
+  t.alike(beeA.core.key, beeB.core.key, 'one hypercore')
+  t.not(beeA.context.lock, beeB.context.lock, 'two locks')
+  const storageA = new Hyperbee2Storage(beeA)
+  const storageB = new Hyperbee2Storage(beeB)
+  const mapA = await ProllyMap.open(storageA, { chunker })
+  const mapB = await ProllyMap.open(storageB, { chunker })
+
+  await mapA.put(key('a'), val('1'))
+  const length = beeA.core.length
+  t.is(length, 1)
+  t.is(await storageB.root(), null, 'the second bee does not see the head')
+
+  // The second bee is behind its core. Its commit throws and appends nothing.
+  await t.exception(mapB.put(key('b'), val('2')), { code: 'CONFLICT' })
+  t.is(beeA.core.length, length, 'nothing was appended')
+  await t.exception(storageB.commit({ blocks: [], root: null, expected: null }), {
+    code: 'CONFLICT',
+    message: 'the bee is behind its core: another Hyperbee2 wrote to it'
+  })
+  t.is(beeA.core.length, length, 'the guard appends nothing')
+
+  // A fresh bee reads the head. The first write is there.
+  const beeC = track(new Hyperbee2(storeA))
+  await beeC.ready()
+  const storageC = new Hyperbee2Storage(beeC)
+  t.alike(await storageC.root(), mapA.root, 'the head holds the first write')
+  const mapC = await ProllyMap.open(storageC, { chunker })
+  t.alike(await mapC.get(key('a')), val('1'))
+  t.is(await mapC.get(key('b')), null)
+
+  // The first bee is at its head. It still commits.
+  await mapA.put(key('c'), val('3'))
+  t.is(beeA.core.length, length + 1)
+  t.alike(await mapA.get(key('c')), val('3'))
+})

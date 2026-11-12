@@ -212,7 +212,9 @@ A branch entry's key is the first key of its child. Every node except the last o
 
 ## One writer per storage
 
-`ProllyMap` and `ProllySet` read the root on `open` and commit every mutation with `expected` set to the root they last wrote. Mutations on one instance run in order through one internal queue, so concurrent calls on one instance all land. Two instances on one storage, or two processes on one hyperbee2, are the caller's problem. The second writer gets `CONFLICT` from `commit`, and the storage is unchanged. Catch the error, open a new instance to read the current root, and retry the mutation. A replica opened with `writable: false` cannot commit. Its `write()` throws `Not writable`.
+`ProllyMap` and `ProllySet` read the root on `open` and commit every mutation with `expected` set to the root they last wrote. Mutations on one instance run in order through one internal queue, so concurrent calls on one instance all land. Two instances on one storage are the caller's problem. The second writer gets `CONFLICT` from `commit`, and the storage is unchanged. Catch the error, open a new instance to read the current root, and retry the mutation.
+
+With `Hyperbee2Storage`, the lock that `commit` takes belongs to the `Hyperbee2` object, not to the hypercore. Two `ProllyMap` instances on one `Hyperbee2` get `CONFLICT`. Two `Hyperbee2` objects on one hypercore, in one process or in two, do not share a head. A writable bee never follows the appends of its core, so the second object does not see the first one's write. `commit` refuses to build on a head that its bee has not seen. When the bee is behind its core, it throws `CONFLICT` with the message `the bee is behind its core: another Hyperbee2 wrote to it` and appends nothing. The rule is one `Hyperbee2` per hypercore per process. Give that one object to every `Hyperbee2Storage` that writes. A replica opened with `writable: false` cannot commit. Its `write()` throws `Not writable`.
 
 ## Old nodes are never deleted
 
