@@ -1024,3 +1024,79 @@ test('create: the set kind collapses duplicate keys and encodes kind 2 leaves', 
     ['a', 'b']
   )
 })
+
+// D-011 F-03. Decision 12: every returned key, value and array is a copy.
+// A change to a result must not change a later read under the same root.
+for (const [label, makeCache] of [
+  ['cache on', () => new Cache()],
+  ['cache off', () => nocache]
+]) {
+  test(`low-level reads return copies, ${label}`, async (t) => {
+    // The value under `k`, or the error code, so that a changed key fails an
+    // assertion instead of the test.
+    const valueOf = (root, k) =>
+      root.getEntry(k).then(
+        ({ result }) => result.value,
+        (err) => err.code
+      )
+    const forms = {
+      getEntry: async (root) => (await root.getEntry(key('b'))).result,
+      getEntries: async (root) => (await root.getEntries([key('b')])).result[0],
+      getAllEntries: async (root) =>
+        (await root.getAllEntries()).result.find((e) => str(e.key) === 'b'),
+      getRangeEntries: async (root) => (await root.getRangeEntries(key('b'), key('bb'))).result[0],
+      iterate: async (root) => (await root.iterate({ gte: key('b'), lte: key('b') }).next()).value,
+      'bulk().previous': async (root) =>
+        (await root.bulk([{ key: key('b'), value: val(9) }])).previous[0]
+    }
+    for (const [name, read] of Object.entries(forms)) {
+      const tree = await Tree.create(list, { cache: makeCache() })
+      const root = await tree.load()
+      const entry = await read(root)
+      t.alike(entry.key, key('b'), `${name}: the entry key`)
+      t.alike(entry.value, val(1), `${name}: the entry value`)
+      entry.key.fill(0x78)
+      entry.value.fill(0x78)
+      t.alike(await valueOf(root, key('b')), val(1), `${name}: getEntry after`)
+      t.alike(
+        (await root.getAllEntries()).result.map((e) => str(e.key)),
+        list.map((e) => str(e.key)),
+        `${name}: getAllEntries keys after`
+      )
+      const again = await tree.load()
+      t.alike(await valueOf(again, key('b')), val(1), `${name}: a reload`)
+    }
+    // One leaf: the array of `getAllEntries` and the bytes of the node.
+    const leafTree = await Tree.create(list, { chunker: bf(MAX_UINT32), cache: makeCache() })
+    const leaf = await leafTree.load()
+    t.ok(leaf.isLeaf)
+    const { result } = await leaf.getAllEntries()
+    result[0].value.fill(0x78)
+    result.length = 0
+    t.is((await leaf.getAllEntries()).result.length, list.length, 'a fresh array')
+    t.alike(await valueOf(leaf, key('a')), val(1))
+    let encoded
+    try {
+      encoded = hex(leaf.encode())
+    } catch (err) {
+      encoded = err.code
+    }
+    t.is(encoded, hex(leaf.bytes), 'the node still encodes to its bytes')
+    // A set entry key is a copy.
+    const setTree = await Tree.create(
+      list.map(({ key }) => ({ key })),
+      { kind: 'set', cache: makeCache() }
+    )
+    const setRoot = await setTree.load()
+    const setEntry = (await setRoot.getEntry(key('b'))).result
+    setEntry.key.fill(0x78)
+    t.alike(
+      await setRoot.getEntry(key('b')).then(
+        ({ result }) => result.key,
+        (err) => err.code
+      ),
+      key('b'),
+      'a set key is a copy'
+    )
+  })
+}
