@@ -507,3 +507,51 @@ for (const seed of [41, 42, 43]) {
     for (const k of pool) t.is(await set.has(k), reference.has(hex(k)))
   })
 }
+
+// D-011 F-01, the set variant. A delayed read must not restore a key that a
+// later delete removed.
+test('a delayed read does not restore a key that a later delete removed', async (t) => {
+  const store = storage()
+  const writer = await ProllySet.open(store, { chunker: bf(FACTOR) })
+  await writer.batch([{ key: key('a') }, { key: key('b') }])
+
+  let release
+  const gate = new Promise((resolve) => {
+    release = resolve
+  })
+  let entered
+  const seen = new Promise((resolve) => {
+    entered = resolve
+  })
+  let pending = true
+  const delayed = {
+    get: async (address) => {
+      const bytes = await store.get(address)
+      if (pending) {
+        pending = false
+        entered()
+        await gate
+      }
+      return bytes
+    },
+    commit: (args) => store.commit(args),
+    root: () => store.root()
+  }
+
+  const set = await ProllySet.open(delayed, { chunker: bf(FACTOR) })
+  const read = set.has(key('a'))
+  await seen
+  await set.delete(key('a'))
+  const committed = set.root
+  release()
+  t.is(await read, true, 'the pending read returns its earlier snapshot')
+  t.is(await set.has(key('a')), false, 'a read after the commit sees the delete')
+  t.alike(set.root, committed)
+  await set.add(key('c'))
+  t.is(await set.has(key('a')), false, 'the next add keeps the delete')
+  const reopened = await ProllySet.open(store, { chunker: bf(FACTOR) })
+  t.alike(reopened.root, set.root)
+  t.is(await reopened.has(key('a')), false, 'the storage holds the delete')
+  t.is(await reopened.has(key('b')), true)
+  t.is(await reopened.has(key('c')), true)
+})

@@ -254,3 +254,54 @@ test('root is a copy', async (t) => {
   t.unlike(map.root, root)
   t.alike(map.root, await map.storage.root())
 })
+
+// D-011 F-01. A read that starts while the root node is not cached loads the
+// root it saw. A mutation that commits before that load completes must win:
+// the stale node must not replace the cached root, or the next mutation
+// builds on it and loses the committed write.
+test('a delayed read does not replace the root that a later put committed', async (t) => {
+  const store = storage()
+  const writer = await ProllyMap.open(store, { chunker: bf(3) })
+  await writer.put(key('a'), val('old'))
+
+  // A storage double with a gate: the first `get` waits until the test
+  // releases it, after it has read the bytes.
+  let release
+  const gate = new Promise((resolve) => {
+    release = resolve
+  })
+  let entered
+  const seen = new Promise((resolve) => {
+    entered = resolve
+  })
+  let pending = true
+  const delayed = {
+    get: async (address) => {
+      const bytes = await store.get(address)
+      if (pending) {
+        pending = false
+        entered()
+        await gate
+      }
+      return bytes
+    },
+    commit: (args) => store.commit(args),
+    root: () => store.root()
+  }
+
+  const map = await ProllyMap.open(delayed, { chunker: bf(3) })
+  const read = map.get(key('a'))
+  await seen
+  await map.put(key('a'), val('new'))
+  const committed = map.root
+  release()
+  t.alike(await read, val('old'), 'the pending read returns its earlier snapshot')
+  t.alike(await map.get(key('a')), val('new'), 'a read after the commit sees the commit')
+  t.alike(map.root, committed)
+  await map.put(key('b'), val('two'))
+  t.alike(await map.get(key('a')), val('new'), 'the next put keeps the committed write')
+  const reopened = await ProllyMap.open(store, { chunker: bf(3) })
+  t.alike(reopened.root, map.root)
+  t.alike(await reopened.get(key('a')), val('new'), 'the storage holds the committed write')
+  t.alike(await reopened.get(key('b')), val('two'))
+})
