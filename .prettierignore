@@ -1,3 +1,4 @@
 test/vectors.json
+test/fixtures/
 spec/
 package-lock.json
