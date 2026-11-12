@@ -154,6 +154,8 @@ Every thrown error carries a `code`. The codes are exported as `errors`.
 | `UNSUPPORTED_VERSION`          | a node with a `version` other than 1                           |
 | `DECODE_ERROR`                 | a node that breaks a decode rule                               |
 
+One error has no `code`. `Not writable` comes from hyperbee2, not from this package. `bee.write()` throws it when `commit` runs on a bee opened with `writable: false`, before the storage adds anything.
+
 ## The storage interface
 
 ```js
@@ -195,7 +197,7 @@ set-leaf:   version uint = 1, kind uint = 2, flags uint, distance uint = 0, entr
 flags: bit 0 = closed. Other bits must be 0.
 ```
 
-A branch entry's key is the first key of its child. Every node except the last of its level is closed. The decoder is canonical. It rejects:
+A branch entry's key is the first key of its child. A node is closed when its last entry is a boundary. So every node except the last of its level is closed, and the last one is closed only when its last entry is a boundary. The `closed` bit is in the hashed bytes. The decoder is canonical. It rejects:
 
 - an unknown version or an unknown kind
 - a flag other than bit 0

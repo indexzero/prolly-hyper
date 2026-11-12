@@ -397,3 +397,57 @@ test('two Hyperbee2 objects on one hypercore: the bee that is behind gets CONFLI
   t.is(beeA.core.length, length + 1)
   t.alike(await mapA.get(key('c')), val('3'))
 })
+
+// D-010 F-05 and F-07. A failed `flush()` unlocks in its finally and does not
+// close the batch (lib/write.js:115-124), so the batch snapshot view stayed
+// open. The no-flush path released the lock through the private
+// `batch._unlock()` alone.
+test('commit closes its batch on both paths and releases the lock without _unlock', async (t) => {
+  const { bee, storage } = await writer(t)
+  const map = await ProllyMap.open(storage, { chunker })
+  await map.put(key('a'), val('1'))
+  const batches = []
+  const write = bee.write.bind(bee)
+  bee.write = (...args) => {
+    const batch = write(...args)
+    batches.push(batch)
+    return batch
+  }
+
+  // A failed flush. The double makes `core.append` throw once.
+  const core = bee.core
+  const append = core.append.bind(core)
+  core.append = async () => {
+    core.append = append
+    throw new Error('disk full')
+  }
+  await t.exception(map.put(key('b'), val('2')), /disk full/)
+  t.is(batches.length, 1)
+  t.is(batches[0].closed, true, 'the batch is closed after a failed flush')
+  t.is(bee.context.lock.locked, false, 'the lock is released after a failed flush')
+
+  // A batch without `_unlock`. The no-flush path falls back to the context lock.
+  bee.write = (...args) => {
+    const batch = write(...args)
+    batch._unlock = undefined
+    batches.push(batch)
+    return batch
+  }
+  // `exception.all`: without the fallback the finally throws a TypeError.
+  await t.exception.all(storage.commit({ blocks: [], root: null, expected: null }), {
+    code: 'CONFLICT'
+  })
+  t.is(batches.length, 2)
+  t.is(batches[1].closed, true, 'the batch is closed on the no-flush path')
+  t.is(bee.context.lock.locked, false, 'the lock is released without _unlock')
+  bee.write = write
+
+  // The storage recovers. A held lock would make the put wait forever.
+  const outcome = await Promise.race([
+    map.put(key('c'), val('3')).then(() => 'committed'),
+    new Promise((resolve) => setTimeout(() => resolve('hung'), 2000))
+  ])
+  t.is(outcome, 'committed')
+  t.alike(await map.get(key('c')), val('3'))
+  t.alike(await map.get(key('a')), val('1'))
+})
