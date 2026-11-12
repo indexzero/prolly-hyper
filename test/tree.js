@@ -495,6 +495,18 @@ test('map: a lookup that differs in a byte that is not valid UTF-8 is not found'
   t.alike(await tree.get(b4a.from('ff41', 'hex')), val(1))
   const { result } = await tree.root.getAllEntries()
   t.is(result.length, 2)
+  // D-010 F-03. The lookup above: `find` returns the stored key fe41 for the
+  // search key ff41, so the equality check runs. Under upstream's
+  // `toString()` equality the two read as equal and the lookup would return
+  // fe41. The comparator says NOT_FOUND.
+  const below = await Tree.create([{ key: b4a.from('fe41', 'hex'), value: val(1) }])
+  t.is(
+    b4a.toString(b4a.from('fe41', 'hex')),
+    b4a.toString(b4a.from('ff41', 'hex')),
+    'same toString'
+  )
+  await below.expectNotFound(t, b4a.from('ff41', 'hex'))
+  t.alike(await below.get(b4a.from('fe41', 'hex')), val(1))
 })
 
 test('map: delete multiple entries', async (t) => {
