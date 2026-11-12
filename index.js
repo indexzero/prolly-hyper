@@ -3,6 +3,7 @@
 const tree = require('./lib/tree')
 const map = require('./lib/map')
 const set = require('./lib/set')
+const { diff } = require('./lib/diff')
 const encoding = require('./lib/encoding')
 const hash = require('./lib/hash')
 const chunker = require('./lib/chunker')
@@ -28,6 +29,7 @@ module.exports = {
   // the high-level API
   ProllyMap: map.ProllyMap,
   ProllySet: set.ProllySet,
+  diff,
   MemoryStorage,
 
   // the consensus parameters
