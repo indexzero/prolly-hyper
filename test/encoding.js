@@ -140,6 +140,32 @@ const refusals = [
   ]
 ]
 
+// D-011 F-04. A flags uint above 32 bits. `flags & ~1` truncated the value
+// to 32 bits, so these decoded and re-encoded to the same bytes. The Decode
+// rules refuse every bit other than bit 0, for every node kind.
+const HIGH_FLAGS = [
+  ['2^32', 'ff0000000001000000'],
+  ['2^32 + 1', 'ff0100000001000000'],
+  ['2^40', 'ff0000000000010000']
+]
+const BRANCH_ADDRESS = '177caacf4842030c869daea02854cec4b3273e57af99a3e8d99f4e059b83dc5a'
+for (const [name, flags] of HIGH_FLAGS) {
+  refusals.push(
+    [`a map leaf with flags ${name}`, '0100' + flags + '00' + '01' + '01610162', 'DECODE_ERROR'],
+    [
+      `a branch with flags ${name}`,
+      '0101' + flags + '01' + '01' + '0161' + BRANCH_ADDRESS,
+      'DECODE_ERROR'
+    ],
+    [`a set leaf with flags ${name}`, '0102' + flags + '00' + '01' + '0161', 'DECODE_ERROR']
+  )
+}
+
+test('the high-flags refusals include the failing input of D-011 F-04', (t) => {
+  const inputs = refusals.map(([, input]) => input)
+  t.ok(inputs.includes('0100ff0000000001000000000101610162'))
+})
+
 for (const [name, input, code] of refusals) {
   test(`decodeNode refuses ${name}`, (t) => {
     t.exception(() => decodeNode(b4a.from(input, 'hex')), { code })
