@@ -1,0 +1,13 @@
+prolly-hyper
+Copyright 2026 Charlie Robbins
+
+This product is a port of mikeal/prolly-trees
+(https://github.com/mikeal/prolly-trees) by Mikeal Rogers, at the upstream
+commit 4c7c81a "Deletion (#23)". The upstream package is licensed under
+(Apache-2.0 AND MIT). The read paths and `create` of its `src/base.js`,
+`src/map.js` and `src/cid-set.js`, and its tests, are the basis of `lib/tree.js`,
+`lib/map.js`, `lib/set.js` and `test/`.
+
+This product is licensed under the Apache License, Version 2.0. See LICENSE.
+The upstream copyright notice and this NOTICE must be kept with any
+redistribution of this product or of a derivative work.

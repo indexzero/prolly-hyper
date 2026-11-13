@@ -1,0 +1,180 @@
+{
+  "source": {
+    "nodes": "TECHNICAL.DESIGN.md, Wire encoding, hand-derived vectors (compact-encoding 3.6.0, hypercore-crypto 3.7.0, 2026-11-12)",
+    "trees": "sslop/S-000/fixtures/spec-vector.json sha256 de290c698af7ed155d828faaae65abaeb16025ac5124f69b7289834c7393d82a"
+  },
+  "nodes": [
+    {
+      "name": "map leaf, closed, [a = b]",
+      "kind": 0,
+      "closed": true,
+      "distance": 0,
+      "entries": [
+        {
+          "key": "61",
+          "value": "62"
+        }
+      ],
+      "bytes": "010001000101610162",
+      "address": "177caacf4842030c869daea02854cec4b3273e57af99a3e8d99f4e059b83dc5a"
+    },
+    {
+      "name": "map leaf, open, [a = b]",
+      "kind": 0,
+      "closed": false,
+      "distance": 0,
+      "entries": [
+        {
+          "key": "61",
+          "value": "62"
+        }
+      ],
+      "bytes": "010000000101610162",
+      "address": "b6f547511aaaa7b2a220f59d033270a7a056f6e473f951c9e95efeef79149f87"
+    },
+    {
+      "name": "set leaf, closed, [a]",
+      "kind": 2,
+      "closed": true,
+      "distance": 0,
+      "entries": [
+        {
+          "key": "61"
+        }
+      ],
+      "bytes": "01020100010161",
+      "address": "c8dda76a7be41fc912a4b151d70b7c3a596edb44e43f531b0f95dd3c81c97a77"
+    },
+    {
+      "name": "branch, open, distance 1, [a -> map leaf closed]",
+      "kind": 1,
+      "closed": false,
+      "distance": 1,
+      "entries": [
+        {
+          "key": "61",
+          "address": "177caacf4842030c869daea02854cec4b3273e57af99a3e8d99f4e059b83dc5a"
+        }
+      ],
+      "bytes": "01010001010161177caacf4842030c869daea02854cec4b3273e57af99a3e8d99f4e059b83dc5a",
+      "address": "7266fc58781fad28704f015e38d747e7e20cb17a1889a1e0f65879050bfb1455"
+    }
+  ],
+  "entryIdentity": {
+    "a = b": {
+      "kind": 0,
+      "key": "61",
+      "value": "62",
+      "bytes": "01610162",
+      "hash": "dbe263c7080622d84a9b666a7e9ddfe1f3a3bbd5b30c02671fd946606d260dff",
+      "identity": 4279051885,
+      "threshold3": 1431655765,
+      "boundary3": false
+    },
+    "set entry, 300-byte key": {
+      "kind": 2,
+      "keyLength": 300,
+      "prefix": "fd2c01"
+    }
+  },
+  "trees": {
+    "map-factor2": {
+      "root": "be161a5a6b66c365427205da536934502fcd081eddb180d7c9cc74bc590e42bc",
+      "rootBytesHex": "0101010402066b65792d30307bce1b07c9d96415750665a8dc30064149da185430912284a60c0b25f327f680066b65792d303413a1c66c330b4a6415c99b63a36863200b4e5f10d92e5ce9cbb9611cbd30cde5",
+      "nodes": 21,
+      "leaves": 9,
+      "rootDistance": 4,
+      "rootClosed": true,
+      "boundaryEntries": [
+        "key-00",
+        "key-03",
+        "key-06",
+        "key-07",
+        "key-08",
+        "key-10",
+        "key-11",
+        "key-12",
+        "key-15"
+      ]
+    },
+    "set-factor2": {
+      "root": "0c3fc558f9908fbc5881833ead79933049f9aed2d4bfb0e3f81186e930376b2f",
+      "rootBytesHex": "0101010502066b65792d3030179d3846553c4d66dec5b9725891147a63de746d39716171aa3d470a883b5546066b65792d31336c47c722537aa471233fc7a85446836b6187921bceea972275751a5de8163d61",
+      "nodes": 29,
+      "leaves": 11,
+      "rootDistance": 5,
+      "rootClosed": true,
+      "boundaryEntries": [
+        "key-01",
+        "key-04",
+        "key-05",
+        "key-06",
+        "key-07",
+        "key-09",
+        "key-11",
+        "key-12",
+        "key-13",
+        "key-14",
+        "key-15"
+      ]
+    },
+    "map-factor3": {
+      "root": "347edcdf09e936565ba9d54b386adc31efdfcc28f81ed5d5a8d7a43cf14aa76f",
+      "rootBytesHex": "0101000402066b65792d30307e3118ad8ffbb812c102cb426e1612d4dd17d381692321a99aefb8a823be594d066b65792d3133bb7d1ba92d37d59a7b7f8341d0bb3f1a1bd32fa6e173a5cc38798f13281a686b",
+      "nodes": 14,
+      "leaves": 5,
+      "rootDistance": 4,
+      "rootClosed": false,
+      "boundaryEntries": [
+        "key-00",
+        "key-03",
+        "key-06",
+        "key-12",
+        "key-15"
+      ]
+    },
+    "set-factor3": {
+      "root": "9f297c54fe05a96bebf3537214748350629ac842f1e9b474d699a1edeb6c202e",
+      "rootBytesHex": "0101010203066b65792d303069c84bf4bb73fc89a89176f6f9e731bc2aeeef0c07f9a71a6fc177bf14da3a73066b65792d30385376e38c1e12df5fa574d493881a596231f959648d58e239caa45c83dcf8ed84066b65792d31309cf06bed4769beecdfd67be27374bf7ae9a180cd1ef674379ee668eb28d598c1",
+      "nodes": 9,
+      "leaves": 5,
+      "rootDistance": 2,
+      "rootClosed": true,
+      "boundaryEntries": [
+        "key-05",
+        "key-07",
+        "key-09",
+        "key-11",
+        "key-15"
+      ]
+    },
+    "map-factor32": {
+      "root": "d808632986c79d31dce4947cf352126d616a02a4e3e207d4f261495c752bf847",
+      "rootBytesHex": "0100000010066b65792d30300676616c2d3030066b65792d30310676616c2d3031066b65792d30320676616c2d3032066b65792d30330676616c2d3033066b65792d30340676616c2d3034066b65792d30350676616c2d3035066b65792d30360676616c2d3036066b65792d30370676616c2d3037066b65792d30380676616c2d3038066b65792d30390676616c2d3039066b65792d31300676616c2d3130066b65792d31310676616c2d3131066b65792d31320676616c2d3132066b65792d31330676616c2d3133066b65792d31340676616c2d3134066b65792d31350676616c2d3135",
+      "nodes": 1,
+      "leaves": 1,
+      "rootDistance": 0,
+      "rootClosed": false,
+      "boundaryEntries": []
+    },
+    "set-factor32": {
+      "root": "c8ce4ba9da8580d1088bbb3eaa53897c66f42d1fe5baa212a68a1123a3b14210",
+      "rootBytesHex": "0102000010066b65792d3030066b65792d3031066b65792d3032066b65792d3033066b65792d3034066b65792d3035066b65792d3036066b65792d3037066b65792d3038066b65792d3039066b65792d3130066b65792d3131066b65792d3132066b65792d3133066b65792d3134066b65792d3135",
+      "nodes": 1,
+      "leaves": 1,
+      "rootDistance": 0,
+      "rootClosed": false,
+      "boundaryEntries": []
+    },
+    "identityExample": {
+      "entry": "key-00/val-00",
+      "entryBytesHex": "066b65792d30300676616c2d3030",
+      "blake2b256Hex": "6ef5f820c057000b6b196d259c6c3e60b84a6bbe7d5f5c6a45168db20dbae730",
+      "identityLE_last4": 820492813,
+      "identityBE_last4_wrong": 230352688,
+      "identityLE_first4_wrong": 553186670,
+      "threshold2": 2147483647,
+      "threshold32": 134217727
+    }
+  }
+}

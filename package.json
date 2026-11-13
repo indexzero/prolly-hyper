@@ -1,0 +1,44 @@
+{
+  "name": "prolly-hyper",
+  "version": "0.0.0",
+  "description": "A port of mikeal/prolly-trees to hyperschema codecs, BLAKE2b and hyperbee2",
+  "type": "commonjs",
+  "main": "index.js",
+  "files": [
+    "index.js",
+    "lib/",
+    "spec/",
+    "NOTICE"
+  ],
+  "scripts": {
+    "build": "node scripts/build.js",
+    "check:spec": "node scripts/check-spec.js",
+    "lint": "prettier --check . && lunte",
+    "format": "prettier --write .",
+    "test": "npm run lint && npm run check:spec && brittle-node test/*.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/indexzero/prolly-hyper.git"
+  },
+  "author": "Charlie Robbins",
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "b4a": "^1.9.0",
+    "compact-encoding": "^3.6.0",
+    "hyperbee2": "^2.22.0",
+    "hypercore-crypto": "^3.7.0",
+    "hyperschema": "^1.26.2"
+  },
+  "devDependencies": {
+    "brittle": "^4.5.0",
+    "corestore": "^7.16.1",
+    "lunte": "^1.8.6",
+    "prettier": "^3",
+    "prettier-config-holepunch": "^2.0.0"
+  },
+  "prettier": "prettier-config-holepunch"
+}
